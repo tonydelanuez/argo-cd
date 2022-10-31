@@ -731,14 +731,14 @@ func (ctrl *ApplicationController) Run(ctx context.Context, statusProcessors int
 		go wait.Until(func() {
 			for ctrl.processAppRefreshQueueItem() {
 			}
-		}, time.Second, ctx.Done())
+		}, ctrl.statusProcessorPeriod, ctx.Done())
 	}
 
 	for i := 0; i < operationProcessors; i++ {
 		go wait.Until(func() {
 			for ctrl.processAppOperationQueueItem() {
 			}
-		}, time.Second, ctx.Done())
+		}, ctrl.operationProcessorPeriod, ctx.Done())
 	}
 
 	go wait.Until(func() {
