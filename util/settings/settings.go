@@ -1170,6 +1170,7 @@ func (mgr *SettingsManager) initialize(ctx context.Context) error {
 	secretsInformer := v1.NewSecretInformer(mgr.clientset, mgr.namespace, 3*time.Minute, indexers)
 	cmInformer.AddEventHandler(eventHandler)
 	secretsInformer.AddEventHandler(eventHandler)
+	log.Info("Test log - running our own service")
 
 	log.Info("Starting configmap/secret informers")
 	go func() {

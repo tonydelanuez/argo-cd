@@ -50,6 +50,8 @@ func NewCommand() *cobra.Command {
 		selfHealTimeoutSeconds   int
 		statusProcessors         int
 		operationProcessors      int
+		operationProcessorPeriod time.Duration
+		statusProcessorPeriod    time.Duration
 		glogLevel                int
 		metricsPort              int
 		metricsCacheExpiration   time.Duration
@@ -152,7 +154,9 @@ func NewCommand() *cobra.Command {
 				kubectlParallelismLimit,
 				persistResourceHealth,
 				clusterFilter,
-				applicationNamespaces)
+				applicationNamespaces,
+				statusProcessorPeriod,
+				operationProcessorPeriod)
 			errors.CheckError(err)
 			cacheutil.CollectMetrics(redisClient, appController.GetMetricsServer())
 
@@ -182,6 +186,8 @@ func NewCommand() *cobra.Command {
 	command.Flags().IntVar(&repoServerTimeoutSeconds, "repo-server-timeout-seconds", env.ParseNumFromEnv("ARGOCD_APPLICATION_CONTROLLER_REPO_SERVER_TIMEOUT_SECONDS", 60, 0, math.MaxInt64), "Repo server RPC call timeout seconds.")
 	command.Flags().IntVar(&statusProcessors, "status-processors", env.ParseNumFromEnv("ARGOCD_APPLICATION_CONTROLLER_STATUS_PROCESSORS", 20, 0, math.MaxInt32), "Number of application status processors")
 	command.Flags().IntVar(&operationProcessors, "operation-processors", env.ParseNumFromEnv("ARGOCD_APPLICATION_CONTROLLER_OPERATION_PROCESSORS", 10, 0, math.MaxInt32), "Number of application operation processors")
+	command.Flags().DurationVar(&operationProcessorPeriod, "operation-processor-period", env.ParseDurationFromEnv("ARGOCD_APPLICATION_CONTROLLER_OPERATION_PROCESSOR_PERIOD", 1*time.Second, 0, math.MaxInt64), "Polling period for each operation processors (default 1s)")
+	command.Flags().DurationVar(&statusProcessorPeriod, "status-processor-period", env.ParseDurationFromEnv("ARGOCD_APPLICATION_CONTROLLER_STATUS_PROCESSOR_PERIOD", 1*time.Second, 0, math.MaxInt64), "Polling period for each status processor (default 1s)")
 	command.Flags().StringVar(&cmdutil.LogFormat, "logformat", env.StringFromEnv("ARGOCD_APPLICATION_CONTROLLER_LOGFORMAT", "text"), "Set the logging format. One of: text|json")
 	command.Flags().StringVar(&cmdutil.LogLevel, "loglevel", env.StringFromEnv("ARGOCD_APPLICATION_CONTROLLER_LOGLEVEL", "info"), "Set the logging level. One of: debug|info|warn|error")
 	command.Flags().IntVar(&glogLevel, "gloglevel", 0, "Set the glog logging level")

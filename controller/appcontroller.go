@@ -96,6 +96,8 @@ type ApplicationController struct {
 	appComparisonTypeRefreshQueue workqueue.RateLimitingInterface
 	appOperationQueue             workqueue.RateLimitingInterface
 	projectRefreshQueue           workqueue.RateLimitingInterface
+	operationProcessorPeriod      time.Duration
+	statusProcessorPeriod         time.Duration
 	appInformer                   cache.SharedIndexInformer
 	appLister                     applisters.ApplicationLister
 	projInformer                  cache.SharedIndexInformer
@@ -135,6 +137,8 @@ func NewApplicationController(
 	persistResourceHealth bool,
 	clusterFilter func(cluster *appv1.Cluster) bool,
 	applicationNamespaces []string,
+	statusProcessorPeriod time.Duration,
+	operationProcessorPeriod time.Duration,
 ) (*ApplicationController, error) {
 	log.Infof("appResyncPeriod=%v, appHardResyncPeriod=%v", appResyncPeriod, appHardResyncPeriod)
 	db := db.NewDB(namespace, settingsMgr, kubeClientset)
@@ -148,6 +152,8 @@ func NewApplicationController(
 		appRefreshQueue:               workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "app_reconciliation_queue"),
 		appOperationQueue:             workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "app_operation_processing_queue"),
 		projectRefreshQueue:           workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "project_reconciliation_queue"),
+		statusProcessorPeriod:         statusProcessorPeriod,
+		operationProcessorPeriod:      operationProcessorPeriod,
 		appComparisonTypeRefreshQueue: workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter()),
 		db:                            db,
 		statusRefreshTimeout:          appResyncPeriod,
@@ -780,6 +786,7 @@ func (ctrl *ApplicationController) isRefreshRequested(appName string) (bool, Com
 }
 
 func (ctrl *ApplicationController) processAppOperationQueueItem() (processNext bool) {
+	log.Info("xxx processing app operation queue item")
 	appKey, shutdown := ctrl.appOperationQueue.Get()
 	if shutdown {
 		processNext = false
@@ -1301,6 +1308,7 @@ func (ctrl *ApplicationController) setOperationState(app *appv1.Application, sta
 }
 
 func (ctrl *ApplicationController) processAppRefreshQueueItem() (processNext bool) {
+	log.Info("--- processing app refresh queue item")
 	appKey, shutdown := ctrl.appRefreshQueue.Get()
 	if shutdown {
 		processNext = false
